@@ -16,9 +16,8 @@ namespace greenworks {
         public:
             ItemCreatorWorker(Nan::Callback* success_callback,
                                     Nan::Callback* error_callback,
-                                    uint32 app_id,
-                                    const WorkshopFileProperties& properties);
-            void OnCreateDone(CreateItemResult_t result, bool io_failure);
+                                    uint32 app_id);
+            void OnCreateDone(CreateItemResult_t* result, bool io_failure);
 
             void Execute() override;
             void HandleOKCallback() override;
@@ -26,7 +25,7 @@ namespace greenworks {
             uint32 app_id_;
 
             PublishedFileId_t publish_file_id_;
-            CCallResult<PublishWorkshopFileWorker,
+            CCallResult<ItemCreatorWorker,
                 CreateItemResult_t> call_result_;
     };
 }

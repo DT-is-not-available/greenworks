@@ -18,7 +18,7 @@ namespace greenworks {
     uint32 app_id)
     : SteamCallbackAsyncWorker(success_callback, error_callback),
       app_id_(app_id) {
-          k_EWorkshopFileTypeCommunity
+          
       }
 
     void ItemCreatorWorker::Execute() {
@@ -28,7 +28,7 @@ namespace greenworks {
             &ItemCreatorWorker::OnCreateDone);
     }
 
-    void ItemCreatorWorker::OnCreateDone(CreateItemResult_t result, bool io_failure) {
+    void ItemCreatorWorker::OnCreateDone(CreateItemResult_t* result, bool io_failure) {
         if ( io_failure || !result->m_eResult == k_EResultOK)
         {
             SetErrorMessage("Failed to create workshop item.");

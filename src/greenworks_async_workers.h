@@ -13,6 +13,7 @@
 #include "steam_async_worker.h"
 #include "greenworks_utils.h"
 #include "greenworks_workshop_workers.h"
+#include "greenworks_workshop_ugc.h"
 
 namespace greenworks {
 
