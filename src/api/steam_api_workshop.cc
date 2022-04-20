@@ -406,6 +406,80 @@ NAN_METHOD(CreateItem) {
     info.GetReturnValue().Set(Nan::Undefined());
 }
 
+NAN_METHOD(StartItemUpdate) {
+    Nan::HandleScope scope;
+
+    if (info.Length() < 2) {
+        THROW_BAD_ARGS("Bad arguments");
+    }
+
+    if (!info[0]/*->ToLocalChecked()*/->IsInt32()) {
+        THROW_BAD_ARGS("First argument must be 32 bit integer app_id");
+    }
+    if (!info[1]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("Second argument must be string item_id");
+    }
+
+    auto app_id = info[0]/*->ToLocalChecked()*/->Int32Value();
+    auto item_id = utils::strToUint64(*(v8::String::Utf8Value(info[1])));
+    
+    auto item_update_id = SteamUGC()->StartItemUpdate(app_id, item_id);
+    
+    auto iui = utils::uint64ToString(item_update_id);
+    info.GetReturnValue().Set(Nan::New(iui).ToLocalChecked());
+}
+
+NAN_METHOD(SetItemContent) {
+    Nan::HandleScope scope;
+
+    if (info.Length() < 2) {
+        THROW_BAD_ARGS("Bad arguments");
+    }
+
+    if (!info[0]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("First argument must be string update id");
+    }
+    if (!info[1]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("Second argument must be string");
+    }
+
+    auto item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+    auto contentFolder = *(v8::String::Utf8Value(info[1]));
+
+    SteamUGC()->SetItemContent(item_id, contentFolder);
+
+    info.GetReturnValue().Set(Nan::Undefined());
+}
+
+NAN_METHOD(SubmitItemUpdate) {
+    Nan::HandleScope scope;
+
+    if (info.Length() < 3) {
+        THROW_BAD_ARGS("Bad arguments");
+    }
+
+    if (!info[0]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("First argument must be string update id");
+    }
+    if (!info[1]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("Second argument must be string change note");
+    }
+    if (!info[2]/*->ToLocalChecked()*/->IsFunction()) {
+        THROW_BAD_ARGS("Third argument must be function");
+    }
+
+    auto item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+    auto change_note = *(v8::String::Utf8Value(info[1]));
+    auto success_callback = new Nan::Callback(info[2].As<v8::Function>());
+    Nan::Callback* error_callback = nullptr;
+
+    if (info.Length() > 3 && info[3]->IsFunction())
+        error_callback = new Nan::Callback(info[3].As<v8::Function>());
+    Nan::AsyncQueueWorker(new greenworks::SubmitItemUpdateWorker(
+        success_callback, error_callback, item_id, change_note));
+    
+    info.GetReturnValue().Set(Nan::Undefined());
+}
 
 void RegisterAPIs(v8::Local<v8::Object> target) {
   InitUgcMatchingTypes(target);
@@ -423,6 +497,9 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   SET_FUNCTION("ugcShowOverlay", UGCShowOverlay);
   SET_FUNCTION("ugcUnsubscribe", UGCUnsubscribe);
   SET_FUNCTION("_CreateItem", CreateItem);
+  SET_FUNCTION("_StartItemUpdate", StartItemUpdate);
+  SET_FUNCTION("_SetItemContent", SetItemContent);
+  SET_FUNCTION("_SubmitItemUpdate", SubmitItemUpdate);
 }
 
 SteamAPIRegistry::Add X(RegisterAPIs);

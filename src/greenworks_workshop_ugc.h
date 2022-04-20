@@ -28,6 +28,23 @@ namespace greenworks {
             CCallResult<ItemCreatorWorker,
                 CreateItemResult_t> call_result_;
     };
+
+    
+    class SubmitItemUpdateWorker : public SteamCallbackAsyncWorker {
+        public:
+            SubmitItemUpdateWorker(Nan::Callback* success_callback,
+                                    Nan::Callback* error_callback,
+                                    uint64 update_id, char* change_note);
+            void OnSubmitDone(SubmitItemUpdateResult_t* result, bool io_failure);
+
+            void Execute() override;
+        private:
+            uint64 update_id_;
+            char* change_note_;
+
+            CCallResult<SubmitItemUpdateWorker,
+                SubmitItemUpdateResult_t> call_result__;
+    };
 }
 
 #endif

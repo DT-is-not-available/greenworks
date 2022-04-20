@@ -45,4 +45,33 @@ namespace greenworks {
             Nan::New(utils::uint64ToString(publish_file_id_)).ToLocalChecked() };
         callback->Call(1, argv);
     }
+
+
+    SubmitItemUpdateWorker::SubmitItemUpdateWorker(
+    Nan::Callback* success_callback, Nan::Callback* error_callback,
+    uint64 update_id, char* change_note)
+    : SteamCallbackAsyncWorker(success_callback, error_callback),
+      update_id_(update_id), change_note_(change_note) {
+          
+      }
+
+    void SubmitItemUpdateWorker::Execute() {
+        SteamAPICall_t submit_result = SteamUGC()->SubmitItemUpdate(update_id_, change_note_);
+
+        call_result__.Set(submit_result, this,
+            &SubmitItemUpdateWorker::OnSubmitDone);
+    }
+
+    void SubmitItemUpdateWorker::OnSubmitDone(SubmitItemUpdateResult_t* result, bool io_failure) {
+        if ( io_failure || !result->m_eResult == k_EResultOK)
+        {
+            SetErrorMessage("Failed to submit updates.");
+            return;
+        }
+        is_completed_ = true;
+    }
 }
+
+//SetItemContent
+//SubmitItemUpdate
+//StartItemUpdate

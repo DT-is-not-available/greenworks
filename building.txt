@@ -1,1 +1,15 @@
-nw-gyp build --target=0.41.3
+0.50.3
+
+
+nw-gyp build --msvs_version=2017 --target=0.41.3 --msbuild_path="C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin\\MSBuild.exe" --arch=ia32
+
+
+before that basically run configure with the same
+greenworks findMSBuild 
+ if (config.variables.msbuild_path) {
+      command = "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\BuildTools\\MSBuild\\15.0\\Bin\\MSBuild.exe";//config.variables.msbuild_path
+      log.verbose('using MSBuild:', command)
+      doBuild()
+      return
+    }
+    
