@@ -69,14 +69,11 @@ int64 GetFileLastUpdatedTime(const char* file_path) {
 std::string uint64ToString(uint64 value) {
   std::ostringstream sout;
   sout << value;
-  return sout.str();
+  return std::to_string(value);
 }
 
 uint64 strToUint64(std::string str) {
-  std::stringstream sin(str);
-  uint64 result;
-  sin >> result;
-  return result;
+  return std::strtoull(str.c_str(), nullptr, 10);
 }
 
 }  // namespace utils

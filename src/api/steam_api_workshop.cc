@@ -406,6 +406,9 @@ NAN_METHOD(CreateItem) {
     info.GetReturnValue().Set(Nan::Undefined());
 }
 
+//For some reason passing to the program and back doesn't work, so just _don't do that I guess_
+UGCUpdateHandle_t item_update_id_actual_hack;
+
 NAN_METHOD(StartItemUpdate) {
     Nan::HandleScope scope;
 
@@ -421,12 +424,13 @@ NAN_METHOD(StartItemUpdate) {
     }
 
     auto app_id = info[0]/*->ToLocalChecked()*/->Int32Value();
-    auto item_id = utils::strToUint64(*(v8::String::Utf8Value(info[1])));
+    UGCUpdateHandle_t item_id = utils::strToUint64(*(v8::String::Utf8Value(info[1])));
     
     auto item_update_id = SteamUGC()->StartItemUpdate(app_id, item_id);
-    
-    auto iui = utils::uint64ToString(item_update_id);
-    info.GetReturnValue().Set(Nan::New(iui).ToLocalChecked());
+    item_update_id_actual_hack = item_update_id;
+
+    std::string iui = utils::uint64ToString(item_update_id_actual_hack);
+    info.GetReturnValue().Set(Nan::New(iui.c_str()).ToLocalChecked());
 }
 
 NAN_METHOD(SetItemContent) {
@@ -443,12 +447,185 @@ NAN_METHOD(SetItemContent) {
         THROW_BAD_ARGS("Second argument must be string");
     }
 
-    auto item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+    UGCUpdateHandle_t item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
     auto contentFolder = *(v8::String::Utf8Value(info[1]));
 
-    SteamUGC()->SetItemContent(item_id, contentFolder);
+    bool setContentSuccess = SteamUGC()->SetItemContent(item_update_id_actual_hack, contentFolder);
 
-    info.GetReturnValue().Set(Nan::Undefined());
+    info.GetReturnValue().Set(Nan::New(setContentSuccess));
+}
+
+NAN_METHOD(SetItemPreview) {
+    Nan::HandleScope scope;
+
+    if (info.Length() < 2) {
+        THROW_BAD_ARGS("Bad arguments");
+    }
+
+    if (!info[0]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("First argument must be string update id");
+    }
+    if (!info[1]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("Second argument must be string");
+    }
+
+    UGCUpdateHandle_t item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+    auto contentFolder = *(v8::String::Utf8Value(info[1]));
+
+    bool setContentSuccess = SteamUGC()->SetItemPreview(item_update_id_actual_hack, contentFolder);
+
+    info.GetReturnValue().Set(Nan::New(setContentSuccess));
+}
+
+NAN_METHOD(GetNumSubscribedItems) {
+    info.GetReturnValue().Set(Nan::New(SteamUGC()->GetNumSubscribedItems()));
+}
+
+NAN_METHOD(GetSubscribedItems) {
+    int sz = SteamUGC()->GetNumSubscribedItems();
+    std::vector<PublishedFileId_t> vec(sz);
+    sz = SteamUGC()->GetSubscribedItems(vec.data(), sz);
+
+    v8::Local<v8::Array> items = Nan::New<v8::Array>(static_cast<int>(vec.size()));
+    for (size_t i = 0; i < vec.size(); ++i)
+        Nan::Set(items, i, Nan::New(utils::uint64ToString(vec[i])).ToLocalChecked());
+
+    info.GetReturnValue().Set(items);
+}
+
+NAN_METHOD(TryGetItemFolder) {
+    PublishedFileId_t item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+
+    uint32 unItemState = SteamUGC()->GetItemState(item_id);
+    if (unItemState & k_EItemStateInstalled)
+    {
+        // indicates the item is currently installed
+        // Try and get the content folder then
+        uint64 sizeOnDisk;
+        const int size = 260;
+        char folder[size];
+        uint32 timestamp;
+        bool success = SteamUGC()->GetItemInstallInfo(item_id, &sizeOnDisk, folder, size, &timestamp);
+        if (success) {
+            //Return the folder
+            info.GetReturnValue().Set(Nan::New(folder).ToLocalChecked());
+        } else
+            //Return an empty string
+            info.GetReturnValue().Set(Nan::New("").ToLocalChecked());
+    }
+    else
+    {
+        // Return empty string if item is not installed
+        info.GetReturnValue().Set(Nan::New("").ToLocalChecked());
+    }
+}
+
+NAN_METHOD(SetItemTags) {
+    Nan::HandleScope scope;
+
+    if (info.Length() < 1) {
+        THROW_BAD_ARGS("Bad arguments");
+    }
+    if (!info[0]->IsArray()) {
+        THROW_BAD_ARGS("First argument must be string array tags");
+    }
+    v8::Local<v8::Array> tags = info[0].As<v8::Array>();
+
+    int len = tags->Length();
+
+    SteamParamStringArray_t *pTags = new SteamParamStringArray_t();
+    const char* tags_arr[100];
+    std::vector<std::string> tags_vec;
+
+    // tags_vec.push_back(*(v8::String::Utf8Value(Nan::Get(tags, (0)).ToLocalChecked())));
+    // tags_arr[0] = tags_vec.back().c_str();
+
+    // tags_vec.push_back(*(v8::String::Utf8Value(Nan::Get(tags, (1)).ToLocalChecked())));
+    // tags_arr[1] = tags_vec.back().c_str();
+
+
+    // for (uint32_t i = 0; i < len; ++i) {
+    //     tags_vec.push_back(*(v8::String::Utf8Value(Nan::Get(tags, (i)).ToLocalChecked())));
+    //     tags_arr[i] = tags_vec.back().c_str();
+    // }
+
+    //Yes, I know what a loop is, but somehow nothing worked except this...
+    std::string thisTag0;
+    std::string thisTag1;
+    std::string thisTag2;
+    std::string thisTag3;
+    std::string thisTag4;
+    std::string thisTag5;
+    std::string thisTag6;
+    std::string thisTag7;
+    std::string thisTag8;
+    std::string thisTag9;
+    
+    if (len > 0) {
+        thisTag0 = (*(v8::String::Utf8Value(Nan::Get(tags, (0)).ToLocalChecked())));
+        tags_arr[0] = thisTag0.c_str();
+    }
+    if (len > 1) {
+        thisTag1 = (*(v8::String::Utf8Value(Nan::Get(tags, (1)).ToLocalChecked())));
+        tags_arr[1] = thisTag1.c_str();
+    }
+    if (len > 2) {
+        thisTag2 = (*(v8::String::Utf8Value(Nan::Get(tags, (2)).ToLocalChecked())));
+        tags_arr[2] = thisTag2.c_str();
+    }
+    if (len > 3) {
+        thisTag3 = (*(v8::String::Utf8Value(Nan::Get(tags, (3)).ToLocalChecked())));
+        tags_arr[3] = thisTag3.c_str();
+    }
+    if (len > 4) {
+        thisTag4 = (*(v8::String::Utf8Value(Nan::Get(tags, (4)).ToLocalChecked())));
+        tags_arr[4] = thisTag4.c_str();
+    }
+    if (len > 5) {
+        thisTag5 = (*(v8::String::Utf8Value(Nan::Get(tags, (5)).ToLocalChecked())));
+        tags_arr[5] = thisTag5.c_str();
+    }
+    if (len > 6) {
+        thisTag6 = (*(v8::String::Utf8Value(Nan::Get(tags, (6)).ToLocalChecked())));
+        tags_arr[6] = thisTag6.c_str();
+    }
+    if (len > 7) {
+        thisTag7 = (*(v8::String::Utf8Value(Nan::Get(tags, (7)).ToLocalChecked())));
+        tags_arr[7] = thisTag7.c_str();
+    }
+    if (len > 8) {
+        thisTag8 = (*(v8::String::Utf8Value(Nan::Get(tags, (8)).ToLocalChecked())));
+        tags_arr[8] = thisTag8.c_str();
+    }
+    if (len > 9) {
+        thisTag9 = (*(v8::String::Utf8Value(Nan::Get(tags, (9)).ToLocalChecked())));
+        tags_arr[9] = thisTag9.c_str(); 
+    }
+    pTags->m_ppStrings = reinterpret_cast<const char**>(tags_arr);
+    pTags->m_nNumStrings = len;
+    SteamUGC()->SetItemTags(item_update_id_actual_hack, pTags);
+}
+
+NAN_METHOD(SetItemTitle) {
+    Nan::HandleScope scope;
+
+    if (info.Length() < 2) {
+        THROW_BAD_ARGS("Bad arguments");
+    }
+
+    if (!info[0]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("First argument must be string update id");
+    }
+    if (!info[1]/*->ToLocalChecked()*/->IsString()) {
+        THROW_BAD_ARGS("Second argument must be string");
+    }
+
+    UGCUpdateHandle_t item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+    auto contentTitle = *(v8::String::Utf8Value(info[1]));
+
+    bool setTitleSuccess = SteamUGC()->SetItemTitle(item_update_id_actual_hack, contentTitle);
+
+    info.GetReturnValue().Set(Nan::New(setTitleSuccess));
 }
 
 NAN_METHOD(SubmitItemUpdate) {
@@ -468,7 +645,7 @@ NAN_METHOD(SubmitItemUpdate) {
         THROW_BAD_ARGS("Third argument must be function");
     }
 
-    auto item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
+    UGCUpdateHandle_t item_id = utils::strToUint64(*(v8::String::Utf8Value(info[0])));
     auto change_note = *(v8::String::Utf8Value(info[1]));
     auto success_callback = new Nan::Callback(info[2].As<v8::Function>());
     Nan::Callback* error_callback = nullptr;
@@ -476,7 +653,7 @@ NAN_METHOD(SubmitItemUpdate) {
     if (info.Length() > 3 && info[3]->IsFunction())
         error_callback = new Nan::Callback(info[3].As<v8::Function>());
     Nan::AsyncQueueWorker(new greenworks::SubmitItemUpdateWorker(
-        success_callback, error_callback, item_id, change_note));
+        success_callback, error_callback, item_update_id_actual_hack, change_note));
     
     info.GetReturnValue().Set(Nan::Undefined());
 }
@@ -499,7 +676,13 @@ void RegisterAPIs(v8::Local<v8::Object> target) {
   SET_FUNCTION("_CreateItem", CreateItem);
   SET_FUNCTION("_StartItemUpdate", StartItemUpdate);
   SET_FUNCTION("_SetItemContent", SetItemContent);
+  SET_FUNCTION("_SetItemTitle", SetItemTitle);
+  SET_FUNCTION("_SetItemPreview", SetItemPreview);
   SET_FUNCTION("_SubmitItemUpdate", SubmitItemUpdate);
+  SET_FUNCTION("GetNumSubscribedItems", GetNumSubscribedItems);
+  SET_FUNCTION("GetSubscribedItems", GetSubscribedItems);
+  SET_FUNCTION("TryGetItemFolder", TryGetItemFolder);
+  SET_FUNCTION("SetItemTags", SetItemTags);
 }
 
 SteamAPIRegistry::Add X(RegisterAPIs);

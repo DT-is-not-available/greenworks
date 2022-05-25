@@ -38,9 +38,11 @@ namespace greenworks {
             void OnSubmitDone(SubmitItemUpdateResult_t* result, bool io_failure);
 
             void Execute() override;
+            void HandleOKCallback() override;
         private:
             uint64 update_id_;
             char* change_note_;
+            EResult result__;
 
             CCallResult<SubmitItemUpdateWorker,
                 SubmitItemUpdateResult_t> call_result__;
