@@ -23,8 +23,9 @@ namespace greenworks {
             void HandleOKCallback() override;
         private:
             uint32 app_id_;
+            std::string publish_file_id___;
 
-            PublishedFileId_t publish_file_id_;
+            //PublishedFileId_t publish_file_id_;
             CCallResult<ItemCreatorWorker,
                 CreateItemResult_t> call_result_;
     };

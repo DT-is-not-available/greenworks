@@ -26,15 +26,19 @@ namespace greenworks {
 
         call_result_.Set(create_result, this,
             &ItemCreatorWorker::OnCreateDone);
+
+        WaitForCompleted();
     }
 
+
+
     void ItemCreatorWorker::OnCreateDone(CreateItemResult_t* result, bool io_failure) {
-        if ( io_failure || !result->m_eResult != k_EResultOK)
+        if ( io_failure || result->m_eResult != k_EResultOK)
         {
             SetErrorMessage("Failed to create workshop item.");
         }
         else
-            publish_file_id_ = result->m_nPublishedFileId;
+            publish_file_id___ = utils::uint64ToString(result->m_nPublishedFileId);
         is_completed_ = true;
     }
 
@@ -42,7 +46,7 @@ namespace greenworks {
         Nan::HandleScope scope;
 
         v8::Local<v8::Value> argv[] = {
-            Nan::New(utils::uint64ToString(publish_file_id_)).ToLocalChecked() };
+            Nan::New(publish_file_id___).ToLocalChecked() };
         callback->Call(1, argv);
     }
 
@@ -60,6 +64,8 @@ namespace greenworks {
 
         call_result__.Set(submit_result, this,
             &SubmitItemUpdateWorker::OnSubmitDone);
+
+        WaitForCompleted();
     }
 
     void SubmitItemUpdateWorker::OnSubmitDone(SubmitItemUpdateResult_t* result, bool io_failure) {
@@ -67,9 +73,9 @@ namespace greenworks {
         {
             SetErrorMessage("Failed to submit updates.");
         }
-        is_completed_ = true;
 
         result__ = result->m_eResult;
+        is_completed_ = true;
     }
     
     void SubmitItemUpdateWorker::HandleOKCallback() {
