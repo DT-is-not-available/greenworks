@@ -219,6 +219,13 @@ Downloads/Synchronizes user's workitems(`UserUGCList.Subscribed`,
 updated time of the item is different with Steam Cloud or the workitem isn't
 existed in local).
 
+### greenworks.ugcSubscribe(published_file_handle, success_callback, [error_callback])
+
+* `published_file_handle` String: Represent uint64, the file handle of
+  subscribed published workshp item(SteamUGCDetails.publishedFileId).
+* `success_callback` Function()
+* `error_callback` Function(err)
+
 ### greenworks.ugcUnsubscribe(published_file_handle, success_callback, [error_callback])
 
 * `published_file_handle` String: Represent uint64, the file handle of
