@@ -520,4 +520,25 @@ void UnsubscribePublishedFileWorker::OnUnsubscribeCompleted(
   is_completed_ = true;
 }
 
+SubscribePublishedFileWorker::SubscribePublishedFileWorker(
+    Nan::Callback* success_callback, Nan::Callback* error_callback,
+    PublishedFileId_t subscribe_file_id)
+        :SteamCallbackAsyncWorker(success_callback, error_callback),
+         subscribe_file_id_(subscribe_file_id) {
+}
+
+void SubscribePublishedFileWorker::Execute() {
+  SteamAPICall_t subscribed_result =
+      SteamRemoteStorage()->SubscribePublishedFile(subscribe_file_id_);
+  subscribe_call_result_.Set(subscribed_result, this,
+      &SubscribePublishedFileWorker::OnSubscribeCompleted);
+  // Wait for subscribing job completed.
+  WaitForCompleted();
+}
+
+void SubscribePublishedFileWorker::OnSubscribeCompleted(
+    RemoteStoragePublishedFileSubscribed_t* result, bool io_failure) {
+  is_completed_ = true;
+}
+
 }  // namespace greenworks
